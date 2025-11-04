@@ -1,4 +1,5 @@
-import { useState } from 'react';
+// src/pages/Home.tsx
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, Camera, QrCode, Trophy, Zap, Gift, ChevronRight } from 'lucide-react';
 import BackgroundWithLogo from '@/components/BackgroundWithLogo';
@@ -10,6 +11,35 @@ const Home = () => {
   const navigate = useNavigate();
   const { currentUser } = useApp();
   const [showQRScanner, setShowQRScanner] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Atualiza o horário a cada segundo
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Formata a hora no formato HH:MM:SS
+  const formatTime = (date: Date): string => {
+    return date.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+  // Formata a data completa
+  const formatDate = (date: Date): string => {
+    return date.toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
 
   return (
     <div className="min-h-screen">
@@ -17,12 +47,47 @@ const Home = () => {
       <Header />
       
       <div className="max-w-6xl mx-auto p-4 pb-24 relative z-10">
+        {/* Cabeçalho - Saudação e Data */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white mb-2">Olá, {currentUser?.name}!</h2>
-          <p className="text-blue-100">O que você gostaria de fazer hoje?</p>
+          <div className="bg-white bg-opacity-95 backdrop-blur-sm rounded-2xl p-5 shadow-elegant">
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">
+              Olá, {currentUser?.name || 'Visitante'}!
+            </h2>
+            <p className="text-gray-600 text-sm capitalize">
+              {formatDate(currentTime)}
+            </p>
+          </div>
         </div>
 
+        {/* Grid 2x2 - Horário e Próxima Atividade */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* Card Horário Atual */}
+          <div className="bg-white bg-opacity-95 backdrop-blur-sm rounded-2xl p-6 shadow-elegant">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="w-6 h-6 text-primary" />
+              <span className="text-sm text-gray-600 font-medium">
+                Horário Atual
+              </span>
+            </div>
+            <p className="text-4xl font-bold text-primary tabular-nums">
+              {formatTime(currentTime)}
+            </p>
+          </div>
+
+          {/* Card Próxima Atividade */}
+          <div className="gradient-primary rounded-2xl p-6 shadow-elegant text-white">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="w-6 h-6" />
+              <span className="text-sm font-medium">Próxima Atividade</span>
+            </div>
+            <p className="text-sm opacity-90 mb-1">Exercícios Matinais</p>
+            <p className="text-4xl font-bold">09:30</p>
+          </div>
+        </div>
+
+        {/* Grid de Ações - 2x2 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Quiz PAVULLA */}
           <button
             onClick={() => navigate('/quiz')}
             className="gradient-quiz rounded-2xl p-6 shadow-glow hover:shadow-xl transition-all transform hover:scale-105 relative overflow-hidden group"
@@ -42,6 +107,7 @@ const Home = () => {
             </div>
           </button>
 
+          {/* Agenda do Dia */}
           <button
             onClick={() => navigate('/agenda')}
             className="bg-white bg-opacity-95 backdrop-blur-sm rounded-2xl p-6 shadow-elegant hover:shadow-glow transition-all transform hover:scale-105 flex items-center justify-between group"
@@ -58,6 +124,7 @@ const Home = () => {
             <ChevronRight className="w-6 h-6 text-gray-400" />
           </button>
 
+          {/* Memórias */}
           <button
             onClick={() => navigate('/memories')}
             className="bg-white bg-opacity-95 backdrop-blur-sm rounded-2xl p-6 shadow-elegant hover:shadow-glow transition-all transform hover:scale-105 flex items-center justify-between group"
@@ -74,6 +141,7 @@ const Home = () => {
             <ChevronRight className="w-6 h-6 text-gray-400" />
           </button>
 
+          {/* Check-in QR */}
           <button
             onClick={() => setShowQRScanner(true)}
             className="bg-white bg-opacity-95 backdrop-blur-sm rounded-2xl p-6 shadow-elegant hover:shadow-glow transition-all transform hover:scale-105 flex items-center justify-between group"
@@ -89,13 +157,6 @@ const Home = () => {
             </div>
             <ChevronRight className="w-6 h-6 text-gray-400" />
           </button>
-
-          <div className="gradient-primary rounded-2xl p-6 shadow-elegant text-white">
-            <Clock className="w-8 h-8 mb-3" />
-            <h3 className="text-lg font-bold mb-1">Próxima Atividade</h3>
-            <p className="text-sm opacity-90">Exercícios Matinais</p>
-            <p className="text-2xl font-bold mt-2">09:30</p>
-          </div>
         </div>
       </div>
 

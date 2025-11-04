@@ -13,7 +13,7 @@ const Quiz = () => {
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [wrongAnswers, setWrongAnswers] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(20);
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [hasPlayedToday, setHasPlayedToday] = useState(false);
 
@@ -37,7 +37,7 @@ const Quiz = () => {
     setCorrectAnswers(0);
     setWrongAnswers(0);
     setSelectedAnswer(null);
-    setTimeLeft(10);
+    setTimeLeft(20);
     setQuizState('playing');
   };
 
@@ -56,7 +56,7 @@ const Quiz = () => {
     if (currentQuestionIndex < 4) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedAnswer(null);
-      setTimeLeft(10);
+      setTimeLeft(20);
     } else {
       setQuizState('result');
       setHasPlayedToday(true);
