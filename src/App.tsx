@@ -16,6 +16,7 @@ import ActivityDetails from "./pages/ActivityDetails"
 import Memories from "./pages/Memories"
 import Documents from "./pages/Documents"
 import UserManagement from "./pages/UserManagement"
+import CreateActivity from "./pages/CreateActivity"
 import NotFound from "./pages/NotFound"
 
 const queryClient = new QueryClient()
@@ -92,6 +93,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requireAdmin>
                     <UserManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/create-activity"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <CreateActivity />
                   </ProtectedRoute>
                 }
               />

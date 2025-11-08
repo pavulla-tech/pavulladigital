@@ -1,5 +1,14 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+  import.meta.env.VITE_API_URL || "https://api.cursoapp.pavulla.com/api";
+
+const QRCODE_BASE_URL =
+  import.meta.env.QRCODE_BASE_URL || "https://qrcode.pavulla.com/v1";
+
+const QRCODE_CLIENTAPP_ID =
+  import.meta.env.QRCODE_CLIENTAPP_ID || "5ccc98c1-002c-417d-9df6-8977a997dcbd";
+
+const QRCODE_TEMPLATE_ID =
+  import.meta.env.QRCODE_TEMPLATE_ID || "3a1f098d-0127-4390-885a-ea2e5723a60b";
 
 // Get auth token from localStorage
 const getAuthToken = () => {
@@ -118,6 +127,88 @@ export const fetchActivities = async (): Promise<ApiActivity[]> => {
 
   const data = await response.json();
   return data.activities || [];
+};
+
+export const createActivity = async (
+  name: string,
+  description: string,
+  activityDate: string,
+  startTime: string,
+  endTime: string
+): Promise<{
+  id: string;
+  name: string;
+  description: string;
+  activity_date: string;
+  start_time: string;
+  end_time: string;
+  created_at: string;
+  qr_code_preview_url?: string;
+}> => {
+  const response = await fetch(`${API_BASE_URL}/activities/`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({
+      name,
+      description,
+      activity_date: activityDate,
+      start_time: startTime,
+      end_time: endTime,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to create activity");
+  }
+  let previewUrl: string;
+
+  const activity: ApiActivity = await response.json();
+
+  // Create QR Code
+  try {
+    // Combine activity date and end time to create expiration timestamp
+    const expiresAt = new Date(`${activityDate}T${endTime}`).toISOString();
+    const preview_url = `https://cursoapp.pavulla.com/api/${activity.id}/sign`;
+    const qrResponse = await fetch(`${QRCODE_BASE_URL}/qrcodes`, {
+      method: "POST",
+      headers: {
+        client_app_id: QRCODE_CLIENTAPP_ID,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        type: "STABLE",
+        expiresAt: expiresAt,
+        templateId: QRCODE_TEMPLATE_ID,
+        clientAppId: QRCODE_CLIENTAPP_ID,
+        third_party_ref: activity.id,
+        deepLinkUrl: preview_url,
+        payloadFormat: "signresponse",
+      }),
+    });
+
+    if (qrResponse.ok) {
+      const qrData = await qrResponse.json();
+      // Convert scan URL to preview URL
+      previewUrl = qrData.ScanUrl.replace("/scan", "/preview");
+    } else {
+      console.error("Failed to create QR code:", await qrResponse.text());
+    }
+  } catch (error) {
+    console.error("Error creating QR code:", error);
+    // Continue without QR code - don't fail the entire activity creation
+  }
+
+  return {
+    id: activity.id,
+    name: activity.name,
+    description: activity.description,
+    activity_date: activity.activity_date,
+    start_time: activity.start_time,
+    end_time: activity.end_time,
+    created_at: activity.created_at,
+    qr_code_preview_url: previewUrl,
+  };
 };
 
 export const signActivity = async (activityId: string): Promise<void> => {
