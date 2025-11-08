@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+  import.meta.env.VITE_API_URL || "https://api.cursoapp.pavulla.com/api";
 
 const QRCODE_BASE_URL =
   import.meta.env.QRCODE_BASE_URL || "http://153.92.209.19:8081/v1";
@@ -8,7 +8,7 @@ const QRCODE_CLIENTAPP_ID =
   import.meta.env.QRCODE_CLIENTAPP_ID || "5ccc98c1-002c-417d-9df6-8977a997dcbd";
 
 const QRCODE_TEMPLATE_ID =
-  import.meta.env.QRCODE_TEMPLATE_ID || "3a1f098d-0127-4390-885a-ea2e5723a60b";
+  import.meta.env.QRCODE_TEMPLATE_ID || "b55eaf0f-1186-4072-b6db-cdaa90e6ee6a";
 
 // Get auth token from localStorage
 const getAuthToken = () => {
@@ -93,9 +93,11 @@ export const login = async (
     body: JSON.stringify({ phone, password }),
   });
 
+  console.log(response)
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Login failed");
+    const error = await response.text();
+    console.log(error)
+    throw new Error(error || "Login failed");
   }
 
   return response.json();
@@ -107,7 +109,7 @@ export const register = async (
   password: string,
   groupName: string,
   isAdmin: boolean,
-  origin: string,
+  origin: string
 ): Promise<{ message: string; user_id: string }> => {
   const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: "POST",
@@ -143,6 +145,36 @@ export const fetchActivities = async (): Promise<ApiActivity[]> => {
 
   const data = await response.json();
   return data.activities || [];
+};
+
+export const scanQRCode = async (qrcodeId: string) => {
+  const response = await fetch(`${QRCODE_BASE_URL}/qrcodes/${qrcodeId}/scan`, {
+    headers: {
+      client_app_id: QRCODE_CLIENTAPP_ID,
+    },
+  });
+
+  // console.log(response);
+  if (!response.ok) {
+    throw new Error("Failed to fetch activities");
+  }
+
+  const { activity_id } = await response.json();
+
+  const response2 = await fetch(
+    `${API_BASE_URL}/activities/${activity_id}/sign`,
+    {
+      headers: getHeaders(),
+    }
+  );
+  // console.log(response2);
+  if (!response2.ok) {
+    throw new Error("Failed to fetch activities");
+  }
+
+  const data = await response2.json();
+  console.log(data);
+  return data;
 };
 
 export const createActivity = async (
@@ -185,7 +217,6 @@ export const createActivity = async (
   try {
     // Combine activity date and end time to create expiration timestamp
     const expiresAt = new Date(`${activityDate}T${endTime}`).toISOString();
-    const preview_url = `https://cursoapp.pavulla.com/api/${activity.id}/sign`;
     const qrResponse = await fetch(`${QRCODE_BASE_URL}/qrcodes`, {
       method: "POST",
       headers: {
@@ -198,8 +229,8 @@ export const createActivity = async (
         templateId: QRCODE_TEMPLATE_ID,
         clientAppId: QRCODE_CLIENTAPP_ID,
         third_party_ref: activity.id,
-        deepLinkUrl: preview_url,
-        payloadFormat: "signresponse",
+        data: { activity_id: activity.id },
+        payloadFormat: "activity_id",
       }),
     });
 
@@ -342,14 +373,14 @@ export const updateUser = async (
   isAdmin: boolean,
   isActive: boolean,
   origin: string,
-  password?: string,
+  password?: string
 ): Promise<ApiUser> => {
   const body: any = {
     full_name: fullName,
     group_name: groupName,
     is_admin: isAdmin,
     is_active: isActive,
-    origin: origin
+    origin: origin,
   };
 
   // Only include password if provided

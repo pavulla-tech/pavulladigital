@@ -78,13 +78,6 @@ const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
 
         <div className="space-y-3">
           <button
-            onClick={handleScan}
-            disabled={isScanning}
-            className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white py-3 rounded-xl font-semibold transition"
-          >
-            {isScanning ? "Processando..." : "Simular Check-in"}
-          </button>
-          <button
             onClick={onClose}
             className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition"
           >

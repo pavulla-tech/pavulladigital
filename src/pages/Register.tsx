@@ -191,19 +191,12 @@ const Register = () => {
                 onChange={(e) =>
                   setRegisterForm({ ...registerForm, origin: e.target.value })
                 }
-                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition ${
-                  phoneError
-                    ? "border-red-500 focus:border-red-500"
-                    : "border-border focus:border-primary"
-                }`}
+                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition`}
                 placeholder="Pavulla SA."
                 maxLength={9}
                 disabled={isLoading}
                 required
               />
-              {phoneError && (
-                <p className="text-red-500 text-sm mt-1">{phoneError}</p>
-              )}
             </div>
 
             {/* Password */}
