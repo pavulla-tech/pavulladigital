@@ -73,6 +73,7 @@ const scan = async (id: string) => {
   const response2 = await fetch(
     `${API_BASE_URL}/activities/${data.activity_id}/sign`,
     {
+      method: "POST",
       headers: getHeaders(),
     }
   );
