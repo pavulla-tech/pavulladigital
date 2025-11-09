@@ -40,31 +40,29 @@ const scan = async (id: string) => {
     },
   });
 
-  console.log(response)
+  console.log(response);
 
   if (!response.ok) {
     throw new Error("Failed to scan QR code");
   }
 
-  const data = await response.text();
+  const jsonText = await response.text();
 
-  console.log(data)
+  const { data } = JSON.parse(jsonText)
 
-  return data
+  const response2 = await fetch(
+    `${API_BASE_URL}/activities/${data.activity_id}/sign`,
+    {
+      headers: getHeaders(),
+    }
+  );
 
-  // const response2 = await fetch(
-  //   `${API_BASE_URL}/activities/${data.activity_id}/sign`,
-  //   {
-  //     headers: getHeaders(),
-  //   }
-  // );
+  if (!response2.ok) {
+    throw new Error("Failed to sign activity");
+  }
 
-  // if (!response2.ok) {
-  //   throw new Error("Failed to sign activity");
-  // }
-
-  // const data2 = await response2.json();
-  // return data2;
+  const data2 = await response2.json();
+  return data2;
 };
 
 const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
