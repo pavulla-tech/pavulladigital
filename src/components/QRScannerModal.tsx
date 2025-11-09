@@ -1,11 +1,11 @@
 "use client"
-import { QrCode, X, AlertCircle } from "lucide-react"
+import { QrCode, X, AlertCircle, Loader2 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import jsQR from "jsqr"
 
 interface QRScannerModalProps {
   onClose: () => void
-  onQRCodeDetected: (url: string) => void
+  onQRCodeDetected: (url: string) => Promise<any>
 }
 
 const QRScannerModal = ({ onClose, onQRCodeDetected }: QRScannerModalProps) => {
@@ -13,7 +13,9 @@ const QRScannerModal = ({ onClose, onQRCodeDetected }: QRScannerModalProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [hasCamera, setHasCamera] = useState(true)
   const [isScanning, setIsScanning] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
   const [scannedData, setScannedData] = useState<string | null>(null)
+  const [processingResult, setProcessingResult] = useState<any>(null)
   const [debugInfo, setDebugInfo] = useState<string>("")
   const [error, setError] = useState<string | null>(null)
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -23,21 +25,18 @@ const QRScannerModal = ({ onClose, onQRCodeDetected }: QRScannerModalProps) => {
 
     const startCamera = async () => {
       try {
-        // Request camera with specific constraints for better mobile support
+        // Try to get camera with portrait orientation
         stream = await navigator.mediaDevices.getUserMedia({
           video: { 
             facingMode: "environment",
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
+            width: { ideal: 720 },  // Swapped for portrait
+            height: { ideal: 1280 }
           },
         })
         
         if (videoRef.current) {
           videoRef.current.srcObject = stream
-          
-          // Add these attributes to prevent sideways rendering
-          videoRef.current.setAttribute('playsinline', 'true')
-          videoRef.current.setAttribute('autoplay', 'true')
+          videoRef.current.playsInline = true
           
           videoRef.current.onloadedmetadata = () => {
             videoRef.current?.play()
@@ -58,7 +57,7 @@ const QRScannerModal = ({ onClose, onQRCodeDetected }: QRScannerModalProps) => {
       }, 500)
     }
 
-    const scanQRCode = () => {
+    const scanQRCode = async () => {
       if (!videoRef.current || !canvasRef.current) return
       
       const video = videoRef.current
@@ -67,11 +66,9 @@ const QRScannerModal = ({ onClose, onQRCodeDetected }: QRScannerModalProps) => {
       
       if (!context || video.readyState !== video.HAVE_ENOUGH_DATA) return
 
-      // Use the video's actual dimensions
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
       
-      // Draw the current video frame
       context.drawImage(video, 0, 0, canvas.width, canvas.height)
 
       const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
@@ -91,13 +88,18 @@ const QRScannerModal = ({ onClose, onQRCodeDetected }: QRScannerModalProps) => {
           stream.getTracks().forEach((track) => track.stop())
         }
         
-        // Call your handler with the detected URL
+        // Process the QR code
+        setIsProcessing(true)
         try {
-          onQRCodeDetected(code)
-          setDebugInfo(`Processando URL: ${code}`)
-        } catch (err) {
-          setError(`Erro ao processar QR: ${err}`)
-          setDebugInfo(`Erro: ${err}`)
+          const result = await onQRCodeDetected(code)
+          setProcessingResult(result)
+          setDebugInfo(`Processamento concluído!`)
+          setError(null)
+        } catch (err: any) {
+          setError(`Erro ao processar: ${err.message || err}`)
+          setDebugInfo(`Falha no processamento`)
+        } finally {
+          setIsProcessing(false)
         }
       }
     }
@@ -123,11 +125,11 @@ const QRScannerModal = ({ onClose, onQRCodeDetected }: QRScannerModalProps) => {
         videoStream.getTracks().forEach((track) => track.stop())
       }
     }
-  }, [onClose, onQRCodeDetected])
+  }, [onQRCodeDetected])
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl p-6 max-w-md w-full">
+      <div className="bg-white rounded-3xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-gray-800">Escanear QR Code</h3>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition">
@@ -143,7 +145,6 @@ const QRScannerModal = ({ onClose, onQRCodeDetected }: QRScannerModalProps) => {
               playsInline 
               muted
               className="w-full h-64 bg-gray-900 rounded-2xl object-cover"
-              style={{ transform: 'scaleX(1)' }}
             />
             <canvas ref={canvasRef} className="hidden" />
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -166,6 +167,14 @@ const QRScannerModal = ({ onClose, onQRCodeDetected }: QRScannerModalProps) => {
           </div>
         )}
         
+        {/* Processing Indicator */}
+        {isProcessing && (
+          <div className="mt-4 p-4 bg-blue-50 rounded-xl flex items-center gap-3">
+            <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+            <p className="text-blue-600 font-semibold">Processando...</p>
+          </div>
+        )}
+
         {/* Debug Info Section */}
         {(debugInfo || error || scannedData) && (
           <div className="mt-4 p-3 bg-gray-50 rounded-xl text-xs space-y-2">
@@ -182,14 +191,24 @@ const QRScannerModal = ({ onClose, onQRCodeDetected }: QRScannerModalProps) => {
             )}
             {scannedData && (
               <p className="text-green-600 break-all">
-                <span className="font-semibold">URL:</span> {scannedData}
+                <span className="font-semibold">URL Escaneada:</span> {scannedData}
               </p>
             )}
           </div>
         )}
+
+        {/* Processing Result */}
+        {processingResult && (
+          <div className="mt-4 p-3 bg-green-50 rounded-xl">
+            <p className="text-sm font-semibold text-green-800 mb-2">✓ Resultado:</p>
+            <pre className="text-xs text-green-700 overflow-x-auto whitespace-pre-wrap break-all">
+              {JSON.stringify(processingResult, null, 2)}
+            </pre>
+          </div>
+        )}
         
         <p className="text-gray-600 text-center my-4 text-sm">
-          Aponte a câmera para o código QR do quarto
+          {scannedData ? "Dados do escaneamento:" : "Aponte a câmera para o código QR"}
         </p>
         
         <div className="space-y-3">
