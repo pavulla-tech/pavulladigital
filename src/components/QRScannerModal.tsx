@@ -103,14 +103,8 @@ const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
           const url = new URL(code); // throws if invalid
           const parts = url.pathname.split("/").filter(Boolean); // ['v1', '<uuid>', 'scan']
           addLog(""+parts)
-          const candidate = parts[2] ?? null; // index 1 when filtered
-          if (!candidate) return null;
-
-          // strict UUID v1-v5 pattern
-          const uuidRe =
-            /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i;
-          const m = candidate.match(uuidRe);
-          return m ? m[0] : null;
+          const candidate = parts[2] ?? null; 
+          return candidate
         } catch (e) {
           return null;
         }
