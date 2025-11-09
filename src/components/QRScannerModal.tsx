@@ -34,40 +34,41 @@ const getHeaders = (includeAuth = true) => {
   return headers;
 };
 
-  const scan = async (id: string, addLog: (log: string) => void) => {
-    const url = new URL(`/qrcodes/${id}/scan`, QRCODE_BASE_URL).toString();
-    addLog(`URL from constructor: ${url}`);
-    const response = await fetch(url, {
-      headers: {
-        client_app_id: QRCODE_CLIENTAPP_ID,
-      },
-    });
+const scan = async (id: string, addLog: (log: string) => void) => {
+  const url = new URL(`/v1/qrcodes/${id}/scan`, QRCODE_BASE_URL).toString();
+  addLog(`URL from constructor: ${url}`);
+  const response = await fetch(url, {
+    headers: {
+      client_app_id: QRCODE_CLIENTAPP_ID,
+    },
+  });
 
-    addLog("qrcode scanned successfully");
-    if (!response.ok) {
-      throw new Error("Failed to fetch activities");
+  addLog("qrcode scanned successfully");
+  if (!response.ok) {
+    addLog(await response.text())
+    throw new Error("Failed to fetch activities");
+  }
+  addLog("qrcode scanned with no errors");
+
+  const { activity_id } = await response.json();
+
+  const response2 = await fetch(
+    `${API_BASE_URL}/activities/${activity_id}/sign`,
+    {
+      headers: getHeaders(),
     }
-    addLog("qrcode scanned with no errors");
+  );
 
-    const { activity_id } = await response.json();
+  addLog("well you didn't get here");
 
-    const response2 = await fetch(
-      `${API_BASE_URL}/activities/${activity_id}/sign`,
-      {
-        headers: getHeaders(),
-      }
-    );
+  if (!response2.ok) {
+    throw new Error("Failed to fetch activities");
+  }
 
-    addLog("well you didn't get here");
-
-    if (!response2.ok) {
-      throw new Error("Failed to fetch activities");
-    }
-
-    const data = await response2.json();
-    console.log(data);
-    return data;
-  };
+  const data = await response2.json();
+  console.log(data);
+  return data;
+};
 
 const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
