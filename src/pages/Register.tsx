@@ -193,7 +193,6 @@ const Register = () => {
                 }
                 className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition`}
                 placeholder="Pavulla SA."
-                maxLength={9}
                 disabled={isLoading}
                 required
               />
