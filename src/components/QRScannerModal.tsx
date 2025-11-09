@@ -5,12 +5,10 @@ import jsQR from "jsqr";
 
 interface QRScannerModalProps {
   onClose: () => void;
-  // onQRCodeDetected: (url: string) => Promise<any>;
 }
+
 const API_BASE_URL = "https://api.cursoapp.pavulla.com/api";
-
 const QRCODE_BASE_URL = "https://qrcode.pavulla.com/v1";
-
 const QRCODE_CLIENTAPP_ID = "5ccc98c1-002c-417d-9df6-8977a997dcbd";
 
 // Get auth token from localStorage
@@ -34,41 +32,35 @@ const getHeaders = (includeAuth = true) => {
   return headers;
 };
 
-const scan = async (id: string, addLog: (log: string) => void) => {
+const scan = async (id: string) => {
   const url = new URL(`/v1/qrcodes/${id}/scan`, QRCODE_BASE_URL).toString();
-  addLog(`URL from constructor: ${url}`);
   const response = await fetch(url, {
     headers: {
       client_app_id: QRCODE_CLIENTAPP_ID,
     },
   });
 
-  addLog("qrcode scanned successfully");
+  console.log(response)
+
   if (!response.ok) {
-    throw new Error("Failed to fetch activities");
+    throw new Error("Failed to scan QR code");
   }
-  addLog("qrcode scanned with no errors");
-    addLog(await response.text())
 
-    return ""
-  // const { activity_id } = await response.json();
+  const { data } = await response.json();
 
-  // const response2 = await fetch(
-  //   `${API_BASE_URL}/activities/${activity_id}/sign`,
-  //   {
-  //     headers: getHeaders(),
-  //   }
-  // );
+  const response2 = await fetch(
+    `${API_BASE_URL}/activities/${data.activity_id}/sign`,
+    {
+      headers: getHeaders(),
+    }
+  );
 
-  // addLog("well you didn't get here");
+  if (!response2.ok) {
+    throw new Error("Failed to sign activity");
+  }
 
-  // if (!response2.ok) {
-  //   throw new Error("Failed to fetch activities");
-  // }
-
-  // const data = await response2.json();
-  // console.log(data);
-  // return data;
+  const data2 = await response2.json();
+  return data2;
 };
 
 const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
@@ -79,16 +71,7 @@ const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [scannedData, setScannedData] = useState<string | null>(null);
   const [processingResult, setProcessingResult] = useState<any>(null);
-  const [debugInfo, setDebugInfo] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const [debugLogs, setDebugLogs] = useState<string[]>([]);
-
-  const addLog = (message: string) => {
-    setDebugLogs((prev) => [
-      ...prev,
-      `${new Date().toLocaleTimeString()}: ${message}`,
-    ]);
-  };
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -96,11 +79,10 @@ const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
 
     const startCamera = async () => {
       try {
-        // Try to get camera with portrait orientation
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: "environment",
-            width: { ideal: 720 }, // Swapped for portrait
+            width: { ideal: 720 },
             height: { ideal: 1280 },
           },
         });
@@ -111,8 +93,6 @@ const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
 
           videoRef.current.onloadedmetadata = () => {
             videoRef.current?.play();
-            addLog("Câmera iniciada");
-            setDebugInfo("Câmera iniciada com sucesso");
             startScanning();
           };
         }
@@ -138,11 +118,9 @@ const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
 
       if (!context || video.readyState !== video.HAVE_ENOUGH_DATA) return;
 
-      // Swap dimensions because video is rotated 90 degrees
       canvas.width = video.videoHeight;
       canvas.height = video.videoWidth;
 
-      // Rotate the canvas context to match the rotated video
       context.save();
       context.translate(canvas.width / 2, canvas.height / 2);
       context.rotate((90 * Math.PI) / 180);
@@ -158,61 +136,40 @@ const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
       const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
       const link = detectQRCode(imageData);
 
-      // safe function
       const extractQrUuid = (code: string) => {
         if (!code) return null;
         try {
-          const url = new URL(code); // throws if invalid
-          const parts = url.pathname.split("/").filter(Boolean); // ['v1', '<uuid>', 'scan']
-          addLog("" + parts);
-          const candidate = parts[2] ?? null;
+          const url = new URL(code);
+          const parts = url.pathname.split("/").filter(Boolean);
+          const candidate = parts[1] ?? null;
           return candidate;
         } catch (e) {
           return null;
         }
       };
 
-      // usage
       const id = extractQrUuid(link);
-      addLog("qrcode id =" + id);
 
       if (id) {
         setScannedData(id);
         setIsScanning(true);
-        addLog(`QR detectado: ${id.substring(0, 50)}...`);
-        setDebugInfo(`QR Code detectado`);
-        console.log("QR Code URL:", id);
 
         if (scanIntervalRef.current) {
           clearInterval(scanIntervalRef.current);
         }
 
-        // Stop the camera
         if (stream) {
           stream.getTracks().forEach((track) => track.stop());
         }
 
-        // Process the QR code
         setIsProcessing(true);
-        addLog("Chamando onQRCodeDetected...");
-        setDebugInfo(`Iniciando processamento da URL...`);
         try {
-          const result = await scan(id, addLog);
-          addLog("Sucesso! Resultado recebido");
+          const result = await scan(id);
           setProcessingResult(result);
-          setDebugInfo(`Processamento concluído!`);
           setError(null);
         } catch (err: any) {
-          console.error("Full error:", err);
-          const errorMsg = err.message || err.toString();
-          addLog(`ERRO: ${errorMsg}`);
-          setError(`Erro: ${errorMsg}`);
-          setDebugInfo(`Falha: ${errorMsg}`);
-
-          // Try to get more details
-          if (err.cause) {
-            setError((prev) => `${prev}\nCausa: ${err.cause}`);
-          }
+          console.error("Error scanning QR code:", err);
+          setError(`Erro: ${err.message || err.toString()}`);
         } finally {
           setIsProcessing(false);
         }
@@ -240,7 +197,7 @@ const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
         videoStream.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [scan]);
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
@@ -289,7 +246,6 @@ const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
           </div>
         )}
 
-        {/* Processing Indicator */}
         {isProcessing && (
           <div className="mt-4 p-4 bg-blue-50 rounded-xl flex items-center gap-3">
             <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
@@ -297,49 +253,19 @@ const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
           </div>
         )}
 
-        {/* Debug Logs Section */}
-        {debugLogs.length > 0 && (
-          <div className="mt-4 p-3 bg-gray-900 rounded-xl max-h-40 overflow-y-auto">
-            <p className="text-xs font-semibold text-gray-300 mb-2">📋 Logs:</p>
-            {debugLogs.map((log, idx) => (
-              <p
-                key={idx}
-                className="text-xs text-gray-400 font-mono break-all"
-              >
-                {log}
-              </p>
-            ))}
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 rounded-xl">
+            <div className="flex items-start gap-2 text-red-600">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <p className="text-sm break-all">{error}</p>
+            </div>
           </div>
         )}
 
-        {/* Debug Info Section */}
-        {(debugInfo || error || scannedData) && (
-          <div className="mt-4 p-3 bg-gray-50 rounded-xl text-xs space-y-2">
-            {error && (
-              <div className="flex items-start gap-2 text-red-600">
-                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <p className="break-all">{error}</p>
-              </div>
-            )}
-            {debugInfo && (
-              <p className="text-gray-600 break-all">
-                <span className="font-semibold">Status:</span> {debugInfo}
-              </p>
-            )}
-            {scannedData && (
-              <p className="text-green-600 break-all">
-                <span className="font-semibold">URL Escaneada:</span>{" "}
-                {scannedData}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Processing Result */}
         {processingResult && (
           <div className="mt-4 p-3 bg-green-50 rounded-xl">
             <p className="text-sm font-semibold text-green-800 mb-2">
-              ✓ Resultado:
+              ✓ Sucesso!
             </p>
             <pre className="text-xs text-green-700 overflow-x-auto whitespace-pre-wrap break-all">
               {JSON.stringify(processingResult, null, 2)}
@@ -349,7 +275,7 @@ const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
 
         <p className="text-gray-600 text-center my-4 text-sm">
           {scannedData
-            ? "Dados do escaneamento:"
+            ? "QR Code processado com sucesso"
             : "Aponte a câmera para o código QR"}
         </p>
 
