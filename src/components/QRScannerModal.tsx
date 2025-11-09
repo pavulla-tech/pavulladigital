@@ -46,7 +46,7 @@ const scan = async (id: string) => {
 
   let data;
   const text = await response.text();
-  console.log("Raw response:", text);
+  console.log("Raw response:", "'"+text+"'");
 
   try {
     // Try parsing once
