@@ -2,7 +2,7 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://api.cursoapp.pavulla.com/api";
 
 const QRCODE_BASE_URL =
-  import.meta.env.QRCODE_BASE_URL || "http://153.92.209.19:8081/v1";
+  import.meta.env.QRCODE_BASE_URL || "https://qrcode.pavulla.com/v1";
 
 const QRCODE_CLIENTAPP_ID =
   import.meta.env.QRCODE_CLIENTAPP_ID || "5ccc98c1-002c-417d-9df6-8977a997dcbd";
