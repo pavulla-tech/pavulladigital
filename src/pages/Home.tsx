@@ -239,7 +239,7 @@ const Home = () => {
 
       <Footer />
 
-      {showQRScanner && <QRScannerModal onClose={() => setShowQRScanner(false)} />}
+      {showQRScanner && <QRScannerModal onQRCodeDetected={scanQRCode} onClose={() => setShowQRScanner(false)} />}
     </div>
   )
 }
