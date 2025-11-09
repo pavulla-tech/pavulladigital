@@ -2,11 +2,14 @@
 FROM node:24-alpine AS build
 WORKDIR /app
 
+# Install build dependencies for native modules
+RUN apk add --no-cache python3 make g++
+
 # Copy package files
 COPY package*.json ./
 
-# Clean install with proper optional dependencies
-RUN npm install --legacy-peer-deps
+# Install dependencies
+RUN npm install
 
 # Copy source and build
 COPY . .
