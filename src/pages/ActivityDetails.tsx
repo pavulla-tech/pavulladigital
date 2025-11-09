@@ -211,6 +211,7 @@ const ActivityDetails = () => {
         title: "Sucesso!",
         description: "Memória adicionada com sucesso.",
       });
+      setTimeout(window.location.reload, 400)
     } catch (error: any) {
       console.error("Error creating memory:", error);
       toast({
@@ -299,6 +300,7 @@ const ActivityDetails = () => {
         title: "Sucesso!",
         description: "Comentário adicionado com sucesso.",
       });
+      setTimeout(window.location.reload, 400)
     } catch (error: any) {
       console.error("Error creating comment:", error);
       toast({
