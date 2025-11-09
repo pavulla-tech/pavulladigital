@@ -6,7 +6,7 @@ import jsQR from "jsqr";
 
 interface QRScannerModalProps {
   onClose: () => void;
-  onQRCodeDetected: (url: string) => Promise<any>;
+  // onQRCodeDetected: (url: string) => Promise<any>;
 }
 
 const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
