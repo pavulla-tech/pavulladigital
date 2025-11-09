@@ -155,9 +155,12 @@ export const scanQRCode = async (id: string, addLog: (log:string)=>void) => {
       client_app_id: QRCODE_CLIENTAPP_ID,
     },
   });
+
+  addLog("qrcode scanned successfully")
   if (!response.ok) {
     throw new Error("Failed to fetch activities");
   }
+  addLog("qrcode scanned with no errors")
 
   const { activity_id } = await response.json();
 
@@ -167,7 +170,9 @@ export const scanQRCode = async (id: string, addLog: (log:string)=>void) => {
       headers: getHeaders(),
     }
   );
-  // console.log(response2);
+
+    addLog("well you didn't get here")
+
   if (!response2.ok) {
     throw new Error("Failed to fetch activities");
   }
