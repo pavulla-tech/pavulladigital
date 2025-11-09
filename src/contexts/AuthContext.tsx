@@ -1,9 +1,15 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { useNavigate } from "react-router-dom";
 
-const TOKEN_KEY = 'auth_token';
-const USER_KEY = 'auth_user';
-const TIMESTAMP_KEY = 'auth_timestamp';
+const TOKEN_KEY = "auth_token";
+const USER_KEY = "auth_user";
+const TIMESTAMP_KEY = "auth_timestamp";
 const TOKEN_EXPIRY_DAYS = 7;
 
 interface User {
@@ -38,29 +44,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const tokenDate = new Date(timestamp);
     const now = new Date();
-    const daysDiff = (now.getTime() - tokenDate.getTime()) / (1000 * 60 * 60 * 24);
+    const daysDiff =
+      (now.getTime() - tokenDate.getTime()) / (1000 * 60 * 60 * 24);
 
     return daysDiff > TOKEN_EXPIRY_DAYS;
   };
 
-  // Load auth state from localStorage on mount
   useEffect(() => {
     const storedToken = localStorage.getItem(TOKEN_KEY);
     const storedUser = localStorage.getItem(USER_KEY);
+    const timestamp = localStorage.getItem(TIMESTAMP_KEY);
 
-    if (storedToken && storedUser && !isTokenExpired()) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setToken(storedToken);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-        logout();
+    if (storedToken && storedUser) {
+      // Check expiry inline
+      let isExpired = true;
+      if (timestamp) {
+        const tokenDate = new Date(timestamp);
+        const now = new Date();
+        const daysDiff =
+          (now.getTime() - tokenDate.getTime()) / (1000 * 60 * 60 * 24);
+        isExpired = daysDiff > TOKEN_EXPIRY_DAYS;
       }
-    } else if (storedToken) {
-      // Token exists but is expired
-      logout();
+
+      if (!isExpired) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setToken(storedToken);
+          setUser(parsedUser);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error("Error parsing stored user:", error);
+          // Clear invalid data
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(USER_KEY);
+          localStorage.removeItem(TIMESTAMP_KEY);
+        }
+      } else {
+        // Token expired, clear everything
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        localStorage.removeItem(TIMESTAMP_KEY);
+      }
     }
   }, []);
 
@@ -111,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

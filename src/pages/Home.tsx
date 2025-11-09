@@ -9,7 +9,7 @@ import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import QRScannerModal from "@/components/QRScannerModal"
 import { useAuth } from "@/contexts/AuthContext"
-import { fetchActivities, ApiActivity } from "@/lib/api"
+import { fetchActivities, ApiActivity, scanQRCode } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 
 const Home = () => {
@@ -239,7 +239,7 @@ const Home = () => {
 
       <Footer />
 
-      {showQRScanner && <QRScannerModal onClose={() => setShowQRScanner(false)} />}
+      {showQRScanner && <QRScannerModal onQRCodeDetected={scanQRCode} onClose={() => setShowQRScanner(false)} />}
     </div>
   )
 }

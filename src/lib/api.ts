@@ -147,8 +147,8 @@ export const fetchActivities = async (): Promise<ApiActivity[]> => {
   return data.activities || [];
 };
 
-export const scanQRCode = async (qrcodeId: string) => {
-  const response = await fetch(`${QRCODE_BASE_URL}/qrcodes/${qrcodeId}/scan`, {
+export const scanQRCode = async (scanUrl: string) => {
+  const response = await fetch(scanUrl, {
     headers: {
       client_app_id: QRCODE_CLIENTAPP_ID,
     },
