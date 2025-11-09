@@ -18,6 +18,11 @@ const QRScannerModal = ({ onClose, onQRCodeDetected }: QRScannerModalProps) => {
   const [processingResult, setProcessingResult] = useState<any>(null)
   const [debugInfo, setDebugInfo] = useState<string>("")
   const [error, setError] = useState<string | null>(null)
+  const [debugLogs, setDebugLogs] = useState<string[]>([])
+  
+  const addLog = (message: string) => {
+    setDebugLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`])
+  }
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -40,6 +45,7 @@ const QRScannerModal = ({ onClose, onQRCodeDetected }: QRScannerModalProps) => {
           
           videoRef.current.onloadedmetadata = () => {
             videoRef.current?.play()
+            addLog("Câmera iniciada")
             setDebugInfo("Câmera iniciada com sucesso")
             startScanning()
           }
@@ -83,6 +89,7 @@ const QRScannerModal = ({ onClose, onQRCodeDetected }: QRScannerModalProps) => {
       if (code) {
         setScannedData(code)
         setIsScanning(true)
+        addLog(`QR detectado: ${code.substring(0, 50)}...`)
         setDebugInfo(`QR Code detectado`)
         console.log("QR Code URL:", code)
         
@@ -97,15 +104,18 @@ const QRScannerModal = ({ onClose, onQRCodeDetected }: QRScannerModalProps) => {
         
         // Process the QR code
         setIsProcessing(true)
+        addLog("Chamando onQRCodeDetected...")
         setDebugInfo(`Iniciando processamento da URL...`)
         try {
           const result = await onQRCodeDetected(code)
+          addLog("Sucesso! Resultado recebido")
           setProcessingResult(result)
           setDebugInfo(`Processamento concluído!`)
           setError(null)
         } catch (err: any) {
           console.error("Full error:", err)
           const errorMsg = err.message || err.toString()
+          addLog(`ERRO: ${errorMsg}`)
           setError(`Erro: ${errorMsg}`)
           setDebugInfo(`Falha: ${errorMsg}`)
           
@@ -191,6 +201,18 @@ const QRScannerModal = ({ onClose, onQRCodeDetected }: QRScannerModalProps) => {
           <div className="mt-4 p-4 bg-blue-50 rounded-xl flex items-center gap-3">
             <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
             <p className="text-blue-600 font-semibold">Processando...</p>
+          </div>
+        )}
+
+        {/* Debug Logs Section */}
+        {debugLogs.length > 0 && (
+          <div className="mt-4 p-3 bg-gray-900 rounded-xl max-h-40 overflow-y-auto">
+            <p className="text-xs font-semibold text-gray-300 mb-2">📋 Logs:</p>
+            {debugLogs.map((log, idx) => (
+              <p key={idx} className="text-xs text-gray-400 font-mono break-all">
+                {log}
+              </p>
+            ))}
           </div>
         )}
 
