@@ -33,7 +33,7 @@ const getHeaders = (includeAuth = true) => {
 };
 
 const scan = async (id: string) => {
-  const url = new URL(`/qrcodes/${id}/scan`, QRCODE_BASE_URL).toString();
+  const url = new URL(`/v1/qrcodes/${id}/scan`, QRCODE_BASE_URL).toString();
   const response = await fetch(url, {
     headers: {
       client_app_id: QRCODE_CLIENTAPP_ID,
