@@ -141,7 +141,7 @@ const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
         try {
           const url = new URL(code);
           const parts = url.pathname.split("/").filter(Boolean);
-          const candidate = parts[1] ?? null;
+          const candidate = parts[2] ?? null;
           return candidate;
         } catch (e) {
           return null;
