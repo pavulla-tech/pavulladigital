@@ -146,7 +146,7 @@ const QRScannerModal = ({ onClose }: QRScannerModalProps) => {
 
       context.save();
       context.translate(canvas.width / 2, canvas.height / 2);
-      // context.rotate((90 * Math.PI) / 180);
+      context.rotate((90 * Math.PI) / 180);
       context.drawImage(
         video,
         -video.videoWidth / 2,
