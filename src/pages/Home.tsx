@@ -155,11 +155,11 @@ const Home = () => {
                 <Zap className="w-8 h-8 text-white animate-pulse" />
               </div>
               <h3 className="text-2xl font-black text-white mb-2">Quiz PAVULLA</h3>
-              <p className="text-white text-sm mb-3 font-medium">Teste seus conhecimentos e ganhe prêmios!</p>
-              <div className="flex items-center gap-2 text-white text-sm">
+              <p className="text-white text-sm mb-3 font-medium">Teste seus conhecimentos</p>
+              {/* <div className="flex items-center gap-2 text-white text-sm">
                 <Gift className="w-5 h-5" />
                 <span className="font-semibold">Boné, Agenda e muito mais!</span>
-              </div>
+              </div> */}
             </div>
           </button>
 
