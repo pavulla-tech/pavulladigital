@@ -160,18 +160,12 @@ const Home = () => {
                 <Trophy className="w-12 h-12 text-white" />
                 <Zap className="w-8 h-8 text-white animate-pulse" />
               </div>
-              <h3 className="text-2xl font-black text-white mb-2">
-                Quiz PAVULLA
-              </h3>
-              <p className="text-white text-sm mb-3 font-medium">
-                Teste seus conhecimentos e ganhe prêmios!
-              </p>
-              <div className="flex items-center gap-2 text-white text-sm">
+              <h3 className="text-2xl font-black text-white mb-2">Quiz PAVULLA</h3>
+              <p className="text-white text-sm mb-3 font-medium">Teste seus conhecimentos</p>
+              {/* <div className="flex items-center gap-2 text-white text-sm">
                 <Gift className="w-5 h-5" />
-                <span className="font-semibold">
-                  Boné, Agenda e muito mais!
-                </span>
-              </div>
+                <span className="font-semibold">Boné, Agenda e muito mais!</span>
+              </div> */}
             </div>
           </button>
 
@@ -246,7 +240,7 @@ const Home = () => {
                 </div>
                 <ChevronRight className="w-6 h-6 text-white opacity-70" />
               </button>
-              <button
+              {/* <button
                 onClick={() => navigate("/documents")}
                 className="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl p-6 shadow-elegant hover:shadow-glow transition-all transform hover:scale-105 flex items-center justify-between group text-white"
               >
@@ -260,7 +254,7 @@ const Home = () => {
                   </div>
                 </div>
                 <ChevronRight className="w-6 h-6 text-white opacity-70" />
-              </button>
+              </button> */}
             </>
           )}
         </div>
